@@ -8,8 +8,7 @@
 use std::{borrow::Borrow, collections::HashMap, sync::Arc};
 
 use tauri::{
-    plugin::{Builder, TauriPlugin},
-    AppHandle, Manager, Runtime,
+    plugin::{Builder, TauriPlugin}, AppHandle, Emitter, Listener, Manager, Runtime
 };
 use tokio::sync::{mpsc, Mutex};
 
