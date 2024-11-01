@@ -26,13 +26,13 @@ where
     TMeta: Send + Sync + 'static,
 {
     Builder::new("rspc")
-        .setup(|app_handle, _| {
+        .setup(|app_handle, api| {
             let (tx, mut rx) = mpsc::unbounded_channel::<jsonrpc::Request>();
             let (resp_tx, mut resp_rx) = mpsc::unbounded_channel::<jsonrpc::Response>();
             // TODO: Don't keep using a tokio mutex. We don't need to hold it over the await point.
             let subscriptions = Arc::new(Mutex::new(HashMap::new()));
 
-            tokio::spawn({
+            tauri::async_runtime::spawn({
                 let app_handle = app_handle.clone();
                 async move {
                     while let Some(req) = rx.recv().await {
@@ -40,7 +40,7 @@ where
                         let router = router.clone();
                         let mut resp_tx = resp_tx.clone();
                         let subscriptions = subscriptions.clone();
-                        tokio::spawn(async move {
+                        tauri::async_runtime::spawn(async move {
                             handle_json_rpc(
                                 ctx,
                                 req,
@@ -56,7 +56,7 @@ where
 
             {
                 let app_handle = app_handle.clone();
-                tokio::spawn(async move {
+                tauri::async_runtime::spawn(async move {
                     while let Some(event) = resp_rx.recv().await {
                         let _ = app_handle
                             .emit("plugin:rspc:transport:resp", event)
